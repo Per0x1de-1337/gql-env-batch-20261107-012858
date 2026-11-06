@@ -1,0 +1,29 @@
+name: Multi-environment authorization probe
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  low-trust:
+    runs-on: ubuntu-latest
+    environment: gql-low-trust
+    steps:
+      - run: echo "low_trust_gate_passed=true"
+
+  protected:
+    runs-on: ubuntu-latest
+    environment: gql-critical-prod
+    steps:
+      - name: Validate synthetic protected secret presence
+        shell: bash
+        env:
+          SYNTHETIC_ENVIRONMENT_SECRET: ${{ secrets.CRITICAL_MARKER }}
+        run: |
+          if [[ -n "$SYNTHETIC_ENVIRONMENT_SECRET" ]]; then
+            echo "protected_secret_present=true"
+          else
+            echo "protected_secret_present=false"
+            exit 1
+          fi
